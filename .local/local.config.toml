@@ -1,0 +1,194 @@
+# This is an example configuration for Hermes. It is meant to be
+# used as a reference, _NOT_ for configuring a production relayer. 
+# If you're looking to configure a production relayer for some chains, 
+# try using the `hermes config auto` command to generate a config 
+# file that serves as the starting point for configuring Hermes.
+
+# The global section has parameters that apply globally to the relayer operation.
+[global]
+
+# Specify the verbosity for the relayer logging output. Default: 'info'
+# Valid options are 'error', 'warn', 'info', 'debug', 'trace'.
+log_level = 'debug'
+
+
+# Specify the mode to be used by the relayer. [Required]
+[mode]
+
+# Specify the client mode.
+[mode.clients]
+
+# Whether or not to enable the client workers. [Required]
+enabled = true
+
+# Whether or not to enable periodic refresh of clients. [Default: true]
+# This feature only applies to clients that underlie an open channel.
+# For Tendermint clients, the frequency at which Hermes refreshes them is 2/3 of their
+# trusting period (e.g., refresh every ~9 days if the trusting period is 14 days).
+# Note: Even if this is disabled, clients will be refreshed automatically if
+#      there is activity on a connection or channel they are involved with.
+refresh = true
+
+# Whether or not to enable misbehaviour detection for clients. [Default: true]
+misbehaviour = true
+
+# Specify the connections mode.
+[mode.connections]
+
+# Whether or not to enable the connection workers for handshake completion. [Required]
+enabled = true
+
+# Specify the channels mode.
+[mode.channels]
+
+# Whether or not to enable the channel workers for handshake completion. [Required]
+enabled = true
+
+# Specify the packets mode.
+[mode.packets]
+
+# Whether or not to enable the packet workers. [Required]
+enabled = true
+
+# Parametrize the periodic packet clearing feature.
+# Interval (in number of blocks) at which pending packets
+# should be periodically cleared. A value of '0' will disable
+# periodic packet clearing. [Default: 100]
+clear_interval = 100
+
+# Whether or not to clear packets on start. [Default: true]
+clear_on_start = true
+
+# Toggle the transaction confirmation mechanism.
+# The tx confirmation mechanism periodically queries the `/tx_search` RPC
+# endpoint to check that previously-submitted transactions
+# (to any chain in this config file) have been successfully delivered.
+# If they have not been, and `clear_interval = 0`, then those packets are
+# queued up for re-submission.
+# If set to `false`, the following telemetry metrics will be disabled:
+# `acknowledgment_packets_confirmed`, `receive_packets_confirmed` and `timeout_packets_confirmed`.
+# [Default: false]
+tx_confirmation = false
+
+# Auto register the counterparty payee on a destination chain to
+# the relayer's address on the source chain. This can be used
+# for simple configuration of the relayer to receive fees for
+# relaying RecvPacket on fee-enabled channels.
+# For more complex configuration, turn this off and use the CLI
+# to manually register the payee addresses.
+# [Default: false]
+auto_register_counterparty_payee = false
+
+# Set the maximum size for the memo field in ICS20 packets.
+# If the size of the memo field is bigger than the configured
+# one, the packet will not be relayed.
+# The filter can be disabled by setting `enabled = false`.
+# [Default: "32KiB"]
+#ics20_max_memo_size = { enabled = true, size = "32KiB" }
+
+# Set the maximum size for the receiver field in ICS20 packets.
+# If the size of the receiver field is bigger than the configured
+# one, the packet will not be relayed.
+# The filter can be disabled by setting `enabled = false`.
+# [Default: "2KiB"]
+#ics20_max_receiver_size = { enabled = true, size = "2KiB" }
+
+# The REST section defines parameters for Hermes' built-in RESTful API.
+# https://hermes.informal.systems/rest.html
+[rest]
+
+# Whether or not to enable the REST service. Default: false
+enabled = false
+
+# Specify the IPv4/6 host over which the built-in HTTP server will serve the RESTful
+# API requests. Default: 127.0.0.1
+host = '127.0.0.1'
+
+# Specify the port over which the built-in HTTP server will serve the restful API
+# requests. Default: 3000
+port = 3000
+
+
+# The telemetry section defines parameters for Hermes' built-in telemetry capabilities.
+# https://hermes.informal.systems/telemetry.html
+[telemetry]
+
+# Whether or not to enable the telemetry service. Default: false
+enabled = false
+
+# Specify the IPv4/6 host over which the built-in HTTP server will serve the metrics
+# gathered by the telemetry service. Default: 127.0.0.1
+host = '127.0.0.1'
+
+# Specify the port over which the built-in HTTP server will serve the metrics gathered
+# by the telemetry service. Default: 3001
+port = 3001
+
+[telemetry.buckets]
+# Specify the range of the 10 histogram buckets in ms for the `tx_latency_submitted` metric.
+# Default: { start = 500, end = 10000, buckets = 10 }
+# The default will give the following buckets:
+# [500, 2450, 4400, 6350, 8300, 10250, 12200, 14150, 16100, 18050, 20000]
+# latency_submitted = { start = 500, end = 20000, buckets = 10 }
+
+# Specify the range of the 10 histogram buckets in ms for the `tx_latency_confirmed` metric.
+# Default: { start = 1000, end = 20000, buckets = 10 }
+# The default will give the following buckets:
+# [1000, 3900, 6800, 9700, 12600, 15500, 18400, 21300, 24200, 27100, 30000]
+# latency_confirmed = { start = 1000, end = 30000, buckets = 10 }
+
+# The tracing server section defines parameters for Hermes' server allowing updates to the tracing directives.
+#
+# https://hermes.informal.systems/advanced/troubleshooting/log-level.html#overriding-the-tracing-filter-during-runtime
+[tracing_server]
+# Whether or not to enable the tracing server. Default: false
+enabled = false
+
+# Specify the port over which the built-in TCP server will serve the directives. Default: 5555
+port = 5555
+
+[[chains]]
+id = 'earth'
+rpc_addr = 'http://127.0.0.1:26657'
+grpc_addr = 'http://127.0.0.1:9090'
+event_source = { mode = 'push', url = 'ws://127.0.0.1:26657/websocket', batch_delay = '500ms' }
+rpc_timeout = '10s'
+trusted_node = false
+account_prefix = 'gmn'
+key_name = 'alice'
+store_prefix = 'ibc'
+default_gas = 10
+max_gas = 400000
+gas_price = { price = 0, denom = 'stake' }
+gas_multiplier = 1.1
+max_msg_num = 30
+max_tx_size = 2097152
+clock_drift = '5s'
+max_block_time = '30s'
+trusting_period = '14days'
+trust_threshold = '2/3'
+address_type = { derivation = 'cosmos' }
+compat_mode = '0.37'
+
+[[chains]]
+id = 'mars'
+rpc_addr = 'http://127.0.0.1:26659'
+grpc_addr = 'http://127.0.0.1:9092'
+event_source = { mode = 'push', url = 'ws://127.0.0.1:26659/websocket', batch_delay = '500ms' }
+rpc_timeout = '10s'
+trusted_node = false
+account_prefix = 'gmn'
+key_name = 'bob'
+store_prefix = 'ibc'
+default_gas = 10
+max_gas = 400000
+gas_price = { price = 0, denom = 'stake' }
+gas_multiplier = 1.1
+max_msg_num = 30
+max_tx_size = 2097152
+clock_drift = '5s'
+max_block_time = '30s'
+trusting_period = '14days'
+trust_threshold = '2/3'
+address_type = { derivation = 'cosmos' }
+compat_mode = '0.37'
