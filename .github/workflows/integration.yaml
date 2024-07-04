@@ -74,7 +74,7 @@ jobs:
             command: osmosisd
             account_prefix: osmo
             native_token: stake
-            features: dynamic-gas-fee
+            features: dynamic-gas-fee,forward-packet,ica
           - package: juno
             command: junod
             account_prefix: juno
@@ -89,7 +89,7 @@ jobs:
             command: migalood
             account_prefix: migaloo
             native_token: stake
-            features: ''
+            features: ics29-fee
           - package: injective
             command: injectived
             account_prefix: inj
